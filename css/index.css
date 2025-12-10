@@ -1,0 +1,215 @@
+@font-face {
+    font-family: 'CalSans-SemiBold';
+    src: url('../fonts/CalSans-SemiBold.otf');
+}
+
+@font-face {
+    font-family: 'Technology';
+    src: url('../fonts/Technology.ttf');
+}
+
+body {
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    color: #ffffff;
+    text-align: center;
+    font-weight: bold;
+    background-color: #000000;
+    font-family: 'CalSans-SemiBold';
+}
+textarea::placeholder{
+    color: #ffffff;
+    font-family: 'CalSans-SemiBold';
+}
+textarea{
+    overflow: hidden;
+    border: none;
+    font-size:3.5vh; 
+    width:55vh; 
+    height: 10vh;
+    letter-spacing: 0.26vh; 
+    opacity: 0.75; 
+    background-color:transparent;
+    resize: none;
+    padding: 1.28vh;
+    padding-left: 0;
+    margin-top: 5vh;
+}
+* {
+    box-sizing: border-box;
+}
+
+.page-bg {
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.page-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3); /* 30% black overlay */
+    pointer-events: none; /* Allow clicks to pass through */
+    z-index: 1;
+}
+
+/* Make sure content appears above the overlay */
+.page-bg > * {
+    position: relative;
+    z-index: 2;
+}
+
+.page-bg-active {
+    animation: fadeInOut 0.5s infinite;
+}
+
+.top {
+    font-size: 2.6vh;
+    padding-top: 5vh;
+    letter-spacing: 2px;
+    opacity: 0.75;
+}
+
+.time {
+    margin: 10.5vh auto 0vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-family: 'Technology';
+    opacity: 0.75;
+}
+
+.time-num {
+    /* width: 18vh; */
+    font-size: 35vh;
+    height: 35vh;
+    padding: 0px;
+    font-weight: normal; 
+}
+
+.work {
+    font-size: 7vh;
+    letter-spacing: 1.2vh;
+    margin-bottom: 4.5vh; 
+    opacity: 0.75;
+}
+
+.text {
+    font-size: 2.2vh;
+    letter-spacing: 0.5vh;
+    margin-bottom: 5.5vh; 
+    opacity: 0.75;
+}
+
+.btn {
+    margin: 0px auto;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-item {
+    border: 3px solid #ffffff;
+    /* width: 19vh; */
+    height: 7.1vh;
+    font-size: 2.8vh;
+    line-height: calc(7.1vh - 3px);
+    cursor: pointer;
+    margin: 0px 6.6vh;
+    letter-spacing: 0.56vh; /* INCREASED by 20% (default ~0.05em = 0.14vh at 2.8vh font, now set to visible spacing) */
+}
+
+.bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 3.6vh 4vh;
+    opacity: 0.85;
+}
+
+.bottom,
+.bottom-left,
+.bottom-right {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.8vh;
+    letter-spacing: 0.3vh;
+    align-items: center;
+    cursor: pointer;
+}
+
+.bottom-img {
+    width: 12px;
+    margin: 0 5px;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Flash animation for timer completion */
+@keyframes flash {
+    0%, 100% {
+        background-color: inherit;
+    }
+    50% {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Different colors for work vs rest period */
+.work {
+    color: #ffffff;
+}
+
+.rest {
+    color: #90EE90; /* Light green for rest */
+}
+
+/* Task list styles */
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1vh 2vh;
+    margin:  1vh 0;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.task-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.task-active {
+    border-left-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.task-name {
+    text-align: left;
+    flex:  1;
+}
+
+.task-progress {
+    opacity: 0.7;
+    margin-left: 2vh;
+}

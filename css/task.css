@@ -1,0 +1,74 @@
+.time {
+    margin: 1.5vh auto;
+}
+.time-num{
+    font-size: 30vh;
+    height: 28vh;
+}
+.work{
+    height: 4.72vh;
+    font-size: 5.55vh;
+    letter-spacing: 0.26vh;
+    margin-bottom: 7.92vh;
+}
+.btn-item{
+    height: 7.02vh;
+    width: 19.16vh;
+    font-size: 2.9vh;
+    letter-spacing: 0.26vh;
+    line-height: calc(7.02vh - 3px);
+}
+.delete-btn{
+    margin-right: 1.5vh; 
+    width: 2.57vh; 
+    cursor: pointer;
+}
+.add-btn{
+    width: 2.57vh; 
+    height: 2.57vh; 
+    cursor: pointer;
+}
+.bottom{
+    padding: 4.60vh 4vh;
+}
+textarea,
+input,
+textarea::placeholder{
+    color: #ffffff;
+    font-family: 'CalSans-SemiBold';
+}
+textarea{
+    overflow: hidden;
+    border: none;
+    font-size:3.5vh; 
+    width:55vh; 
+    height: 12vh;
+    letter-spacing: 0.28vh; 
+    opacity: 0.75; 
+    background-color:transparent;
+    resize: none;
+    padding: 1.28vh;
+    padding-left: 0;
+    margin-top: 5vh;
+    line-height: 5vh;
+}
+textarea:focus,
+input:focus{
+    outline: none;
+}
+.up-dowm-btn{
+    height:3.3vh;
+    cursor: pointer;
+}
+#input-task-num{
+    padding: 0 1.28vh; 
+    margin: 0 5vh; 
+    border: 3px solid #FFFFFF;
+    width: 19.16vh; 
+    background-color: rgba(0, 0, 0, 0.75);
+    background: transparent; 
+    color: #FFFFFF;
+    height: 7.1vh;
+    font-size: 3.5vh;
+    line-height: calc(7.1vh - 3px);
+}

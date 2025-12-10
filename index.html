@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪐ORBIT - Pomodoro Focus</title>
+    <link rel="stylesheet" href="./css/index.css">
+    <link rel="stylesheet" href="./css/task.css">
+    <style>
+        .top{
+            display: flex; 
+            justify-content: space-between;
+        }
+        .top-div-ty{
+            width: 20%;
+            cursor: pointer;
+        }
+        .spotify-player {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            width: 400px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+            z-index: 1000;
+        }
+
+        .spotify-player.active {
+            display: block;
+        }
+
+        /* ✅ UPDATED: Smaller icons with tighter spacing */
+        .task-header-icons {
+            display: flex;
+            gap: 1.5vh;  /* Closer together */
+            align-items: center;
+        }
+
+        .delete-btn,
+        .add-btn {
+            width: 3.5vh !important;   /* Smaller - between original and too big */
+            height: 3.5vh !important;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .delete-btn:hover,
+        .add-btn:hover {
+            transform: scale(1.15);  /* Slight zoom on hover */
+        }
+
+        /* Reserve space for task name */
+        #current-task-display {
+            font-size: 2.94vh;
+            letter-spacing: 0.26vh;
+            min-height: 4vh;
+            visibility: visible;
+        }
+
+        #current-task-display.empty {
+            opacity: 0;
+        }
+
+        .tanceng-container{
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        .tanceng{
+            height: 60vh;
+            width: 55vw;
+        }
+        .tanceng-title{
+            height: 10vh;
+            padding-top: 0.3vh;
+            color: #ffffff;
+            font-size: 4.2vh;
+            text-align: center;
+        }
+        .tanceng-box-ty{
+            background-color: #ffffff;
+            height: 50vh;
+            padding: 5vh 4vw;
+        }
+        .tan-box-title{
+            height: 5vh;
+            font-size: 3.8vh;
+            letter-spacing: 0.1vh;
+            color: #aaaaaa;
+            margin-bottom: 6.5vh;
+        }
+        .tan-box-title-span{
+            text-decoration: underline;
+            text-decoration-color: #cccccc;
+            padding-left: 1vh;
+        }
+        .div-input{
+            margin-top: 1.2vh;
+            height: 5vh;
+            line-height: 5vh;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+        }
+        .div-input-left{
+            font-size: 3.7vh;
+            color: #000000;
+            letter-spacing: 0.1vh;
+        }
+        .div-input-input{
+            width: 55%;
+            height: 5vh;
+            line-height: 5vh;
+            background-color: #cccccc;
+            border: none;
+            font-size: 3.8vh;
+            color: #000000;
+            padding: 0 1vw;
+            text-align: right;
+        }
+        #login-result,
+        #signup-result{
+            font-size: 2.5vh;
+            color: #aa0101;
+            text-align: right;
+            letter-spacing: 0.15vh;
+            position: absolute;
+            bottom: -4.7vh;
+            right: 0;
+        }
+        .tan-btn-container{
+            width: 70%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+        }
+        .tan-button{
+            border: none;
+            font-size: 4.2vh;
+            letter-spacing: 0.1vh;
+            color: #aaaaaa;
+            background-color: transparent;
+            /* font-weight: bold; */
+            font-family: 'CalSans-SemiBold';
+            cursor: pointer;
+        }
+        .tan-button-active{
+            color: #000000;
+        }
+    </style>
+    <script src="./js/task.js"></script>
+    <script src="./js/user.js"></script>
+</head>
+
+<body>
+    <div id="page-bg" class="page-bg">
+        <div class="top" style="padding: 5vh 4vh 0;">
+            <div class="top-div-ty" style="text-align: left;" onclick="report()">WEEKLY REPORT</div>
+            <div>POMODORO FOCUS</div>
+            <div class="top-div-ty" style="text-align: right;">
+                <span style="padding-right: 1.5vh;" onclick="signupOpen()" id="btn-sign-up">SIGN UP</span>
+                <span style="padding-left: 1.5vh;" onclick="loginOpen()" id="btn-log-in">LOG IN</span>
+                <span style="padding-left: 1.5vh;" onclick="logout()" id="btn-log-out">LOG OUT</span>
+            </div>
+        </div>
+        <div class="main" style="display: flex; width: 100%;margin-top: 8vh;height: 68vh;">
+            <div class="main-left" style="width: 50%; border-right: 5px solid #FFFFFF; padding: 4.09vh 0 4.09vh 15vh;">
+                <!-- ✅ Task name display -->
+                <div id="current-task-display" class="empty">&nbsp;</div>
+                
+                <div class="time">
+                    <div id="time-minute-1" class="time-num">2</div>
+                    <div id="time-minute-2" class="time-num">5</div>
+                    <div class="time-num" style="width: 5vh;">:</div>
+                    <div id="time-second-1" class="time-num">0</div>
+                    <div id="time-second-2" class="time-num">0</div>
+                </div>
+                <div id="left-title" class="work">LEFT TO WORK!</div>
+                <div class="btn">
+                    <div class="btn-item" onclick="reset()">RESET</div>
+                    <div id="btn-start" class="btn-item" onclick="startClick()">START</div>
+                </div>
+            </div>
+            <div class="main-right" style="width: 50%;padding: 0 15vh;">
+                <!-- ✅ UPDATED: Smaller, closer icons -->
+                <div style="display: flex; margin-top: 4.1vh; justify-content: space-between; align-items: center;" id="task-top">
+                    <div style="font-size: 4.2vh; width: 14.56vh; letter-spacing: 0.26vh;">TASKS</div>
+                    <div class="task-header-icons">
+                        <img class="delete-btn" src="./images/delete.png" alt="Delete all" onclick="deleteAll()">
+                        <img class="add-btn" src="./images/add.png" alt="Add task" onclick="clickAdd()">
+                    </div>
+                </div>
+                <div id="task-list" style="font-size: 3.94vh;letter-spacing: 0.3vh; margin-top: 5vh;"></div>
+            </div>
+        </div>
+        <div class="bottom">
+            <div class="bottom-left">
+                <img id="play-pause-btn" class="bottom-img" src="./images/play.png" alt="" onclick="toggleMusic()">
+                <img class="bottom-img" style="width: 16px;" src="./images/change_music.png" alt=""
+                    onclick="changeMusic()">
+                <img class="bottom-img" src="./images/music.png" alt="">
+                <div id="song-title">Brandenburg Concerto No.4 in G Major, BWV10 49: L. Allegro</div>
+            </div>
+            <div class="bottom-right" onclick="getNASAImage()">
+                <div>change a Pic</div>
+                <img class="bottom-img" src="./images/change_image.png" alt="">
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio-bg" style="visibility: hidden;"></audio>
+
+    <!-- Spotify Player -->
+    <div id="spotify-player" class="spotify-player">
+        <iframe id="spotify-iframe" style="border-radius:12px" width="100%" height="80" frameBorder="0"
+            allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"></iframe>
+    </div>
+
+    <!--tanceng-->
+    <div class="tanceng-container" style="display: none;" id="tanceng-wrapper">
+        <!-- login in layer -->
+        <div class="tanceng" style="display: none;" id="tanceng-login">
+            <div class="tanceng-title">LOG INTO YOUR ACCOUNT</div>  
+            <div class="tanceng-box-ty">
+                <div class="tan-box-title">Don't have an account yet? <span class="tan-box-title-span" style="cursor: pointer;" onclick="signupOpen()">Sign up!</span></div>
+                <div class="div-input">
+                    <div class="div-input-left">EMAIL ADRESS</div>
+                    <input class="div-input-input" id="input-login-name" type="text">
+                </div>
+                <div class="div-input" style="position: relative;">
+                    <div class="div-input-left">PASSWORD</div>
+                    <input class="div-input-input" id="input-login-password" type="password">
+                    <div id="login-result">Emall or password invalld.</div>
+                </div>
+                
+                <div class="tan-btn-container" style="margin-top: 9.5vh;">
+                    <button class="tan-button" onclick="layerClose()">CANCEL</button>
+                    <button class="tan-button tan-button-active" onclick="login()">LOG IN</button>
+                </div>
+            </div>
+        </div>
+         <!-- sign up layer -->
+        <div class="tanceng" style="display: none;" id="tanceng-signup">
+            <div class="tanceng-title">SIGN UP A NEW ACCOUNT</div>
+            <div class="tanceng-box-ty">
+                <div class="tan-box-title" style="margin-bottom: 4vh;">Already have an account? <span class="tan-box-title-span" style="cursor: pointer;" onclick="loginOpen()">Log in!</span></div>
+                <div class="div-input">
+                    <div class="div-input-left">EMAIL ADRESS</div>
+                    <input id="input-signup-name" class="div-input-input" id="input-signup-name" type="text">
+                </div>
+                <div class="div-input">
+                    <div class="div-input-left">PASSWORD</div>
+                    <input id="input-signup-password" class="div-input-input" id="input-signup-password" type="password">
+                </div>
+                <div class="div-input" style="position: relative;">
+                    <div class="div-input-left">CONFIRM PASSRORD</div>
+                    <input id="input-signup-confirm" class="div-input-input" id="input-signup-confirm" type="password">
+                    <div id="signup-result"></div>
+                </div>
+                
+                <div class="tan-btn-container" style="margin-top: 7.5vh;">
+                    <button class="tan-button" onclick="layerClose()">CANCEL</button>
+                    <button class="tan-button tan-button-active" onclick="signup()">SIGN UP</button>
+                </div>
+            </div>
+        </div>
+        <!-- report layer -->
+        <div class="tanceng" style="display: none; height: 70vh;" id="tanceng-report">
+            <div class="tanceng-title">WEEKLY REPORT</div>  
+            <div class="tanceng-box-ty" style="padding: 4vh 0 0; height: 60vh;">
+                <div style="display: flex; justify-content: space-between; padding: 0 2vw 0 3.5vw; height: 4vh; line-height: 4vh; ">
+                    <div class="tanceng-title" style="color: #000000;height: auto; text-align: left; padding: 0; font-size: 3vh; position: relative;">TOTAL FOCUS HOURS THIS WEEK: <span id="report-total"></span></div>
+                    <div style="font-size: 4vh; font-weight: bold; color: #000000; cursor: pointer;" onclick="layerClose()">x</div>
+                </div>
+                
+                <div id="layer-chart" style="width: 100%; height: 50vh;"></div> 
+            </div>
+        </div>
+    </div>
+
+    
+    <script src="./lib/echarts.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/user.js"></script>
+    <script src="./js/task. js"></script>
+    <script src="./js/index.js"></script>
+    <script>
+        // All your existing JavaScript for NASA, Spotify, etc.  stays the same...
+        let usedDates = [];
+        let tracksUri = "";
+        let accessToken = "";
+        let trackList = [];
+        let currentTrackUri = "";
+        let isPlaying = false;
+        let nasaAttempts = 0;
+
+        function getRandomNASADate() {
+            const startDate = new Date('1995-06-16');
+            const endDate = new Date('2025-01-06');
+            let randomDate;
+            let attempts = 0;
+
+            do {
+                const startTime = startDate.getTime();
+                const endTime = endDate.getTime();
+                const randomTime = startTime + Math.random() * (endTime - startTime);
+                randomDate = new Date(randomTime);
+                attempts++;
+
+                if (attempts > 50) {
+                    usedDates = [];
+                    break;
+                }
+            } while (usedDates.includes(randomDate.toISOString().split('T')[0]));
+
+            const year = randomDate.getFullYear();
+            const month = String(randomDate.getMonth() + 1).padStart(2, '0');
+            const day = String(randomDate.getDate()).padStart(2, '0');
+            const dateStr = year + "-" + month + "-" + day;
+            usedDates.push(dateStr);
+            return dateStr;
+        }
+
+        function checkImageQuality(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img. onload = function () {
+                    const width = this.naturalWidth;
+                    const height = this.naturalHeight;
+                    console.log(`Image dimensions: ${width}x${height}`);
+                    const minWidth = 1920;
+                    const minHeight = 1080;
+                    if (width >= minWidth && height >= minHeight) {
+                        console.log('✓ Image is high quality! ');
+                        resolve(true);
+                    } else {
+                        console.log('✗ Image too small, trying another.. .');
+                        resolve(false);
+                    }
+                };
+                img.onerror = function () {
+                    console.log('✗ Image failed to load, trying another...');
+                    resolve(false);
+                };
+                setTimeout(() => {
+                    console.log('✗ Image load timeout, trying another...');
+                    resolve(false);
+                }, 5000);
+                img.src = imageUrl;
+            });
+        }
+
+        async function getNASAImage() {
+            if (nasaAttempts > 20) {
+                console.log('Too many attempts, stopping...');
+                nasaAttempts = 0;
+                return;
+            }
+            nasaAttempts++;
+            const dateStr = getRandomNASADate();
+            console.log(`[Attempt ${nasaAttempts}] Fetching NASA image for date: ${dateStr}`);
+
+            try {
+                const response = await fetch('https://api.nasa.gov/planetary/apod? api_key=nadHSFcvaHdLHtlXiPwRjMeOS9vKdgvTYZFgh9c1&date=' + dateStr);
+                if (!response.ok) throw new Error('NASA API request failed');
+                const data = await response.json();
+                console.log('NASA image received:', data. title);
+
+                if (data.media_type !== 'image') {
+                    console.log('Got a video instead of image, fetching another date...');
+                    getNASAImage();
+                    return;
+                }
+
+                const imageUrl = data.hdurl || data.url;
+                const isHighQuality = await checkImageQuality(imageUrl);
+
+                if (isHighQuality) {
+                    document.querySelector(". page-bg").style.backgroundImage = "url('" + imageUrl + "')";
+                    document.querySelector("#page-bg").classList.add('page-bg-active');
+                    setTimeout(() => {
+                        document. querySelector("#page-bg").classList.remove('page-bg-active');
+                    }, 250);
+                    nasaAttempts = 0;
+                } else {
+                    console.log('Fetching another date for better quality...');
+                    getNASAImage();
+                }
+            } catch (error) {
+                console.error('NASA API Error:', error);
+                getNASAImage();
+            }
+        }
+
+        function getSpotifyToken() {
+            const clientId = '192eb498ca6344ec9ed9265249cbb2b5';
+            const clientSecret = '024c34f7ae3147a0b341d106900d42b9';
+            const credentials = btoa(clientId + ':' + clientSecret);
+            console.log('Requesting Spotify token...');
+
+            fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + credentials
+                },
+                body: 'grant_type=client_credentials'
+            })
+                .then(response => {
+                    console.log('Token response status:', response.status);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error('Token request failed:  ' + text);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Token received successfully');
+                    accessToken = data. access_token;
+                    searchSpotifyTracks();
+                })
+                .catch(error => {
+                    console.error('Spotify Token Error:', error);
+                    document.querySelector("#song-title").innerHTML = "Brandenburg Concerto No. 4 in G Major, BWV1049:  I. Allegro";
+                });
+        }
+
+        function searchSpotifyTracks() {
+            const searchQueries = [
+                'classical piano',
+                'bach',
+                'mozart',
+                'beethoven',
+                'focus music',
+                'study music'
+            ];
+            const query = searchQueries[Math.floor(Math.random() * searchQueries.length)];
+            console.log('Searching Spotify for:', query);
+
+            fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50`, {
+                method: 'GET',
+                headers: {
+                    'Authorization':  'Bearer ' + accessToken
+                }
+            })
+                .then(response => {
+                    console.log('Search response status:', response.status);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error('Search request failed: ' + text);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Search results received:', data);
+                    if (data.tracks && data.tracks.items && data.tracks.items.length > 0) {
+                        trackList = data.tracks.items;
+                        displayRandomTrack();
+                    } else {
+                        console.log('No tracks found');
+                        document.querySelector("#song-title").innerHTML = "Brandenburg Concerto No.4 in G Major, BWV1049: I. Allegro";
+                    }
+                })
+                .catch(error => {
+                    console.error('Spotify Search Error:', error);
+                    document.querySelector("#song-title").innerHTML = "Brandenburg Concerto No.4 in G Major, BWV1049: I. Allegro";
+                });
+        }
+
+        function displayRandomTrack() {
+            if (trackList.length > 0) {
+                const randomIndex = Math.floor(Math. random() * trackList.length);
+                const track = trackList[randomIndex];
+                if (track && track.name && track.artists && track.artists[0]) {
+                    const trackName = track.name;
+                    const artistName = track.artists. map(artist => artist.name).join(', ');
+                    document.querySelector("#song-title").innerHTML = `${trackName} - ${artistName}`;
+                    currentTrackUri = track.id;
+                    console.log('Displaying track:', trackName, '-', artistName, 'ID:', currentTrackUri);
+                }
+            }
+        }
+
+        function changeMusic() {
+            if (trackList.length > 0) {
+                displayRandomTrack();
+                if (isPlaying) {
+                    updateSpotifyPlayer();
+                }
+            } else {
+                searchSpotifyTracks();
+            }
+        }
+
+        function toggleMusic() {
+            if (! currentTrackUri) {
+                alert('Please wait for music to load.. .');
+                return;
+            }
+            const playerDiv = document.getElementById('spotify-player');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+
+            if (! isPlaying) {
+                updateSpotifyPlayer();
+                playerDiv.classList.add('active');
+                isPlaying = true;
+                playPauseBtn.src = './images/pause.png';
+                console.log('Playing music...');
+            } else {
+                playerDiv.classList.remove('active');
+                isPlaying = false;
+                playPauseBtn.src = './images/play.png';
+                console. log('Pausing music...');
+            }
+        }
+
+        function updateSpotifyPlayer() {
+            if (currentTrackUri) {
+                const iframe = document.getElementById('spotify-iframe');
+                iframe.src = `https://open.spotify.com/embed/track/${currentTrackUri}? utm_source=generator&theme=0`;
+            }
+        }
+
+        // Initialize
+        getNASAImage();
+        getSpotifyToken();
+        
+        // Check authentication and load tasks
+        checkAuthStatus().then(isAuthenticated => {
+            if (isAuthenticated) {
+                getTasks();
+            }
+        });
+    </script>
+</body>
+
+</html>

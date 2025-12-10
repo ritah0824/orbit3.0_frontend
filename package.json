@@ -1,0 +1,15 @@
+{
+  "name": "orbit-frontend",
+  "version": "1.0.0",
+  "description": "Orbit Pomodoro Focus Timer - Frontend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "keywords": ["pomodoro", "frontend"],
+  "author": "ritah0824",
+  "license": "MIT"
+}
