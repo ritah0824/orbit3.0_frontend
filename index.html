@@ -63,7 +63,7 @@
         #current-task-display.empty {
             opacity: 0;
         }
-
+        /**弹层**/
         .tanceng-container{
             position: fixed;
             top: 0;
@@ -228,7 +228,7 @@
             loading="lazy"></iframe>
     </div>
 
-    <!--tanceng-->
+    <!--弹层-->
     <div class="tanceng-container" style="display: none;" id="tanceng-wrapper">
         <!-- login in layer -->
         <div class="tanceng" style="display: none;" id="tanceng-login">
@@ -292,12 +292,9 @@
 
     
     <script src="./lib/echarts.min.js"></script>
-    <script src="./js/config.js"></script>
-    <script src="./js/user.js"></script>
-    <script src="./js/task. js"></script>
     <script src="./js/index.js"></script>
     <script>
-        // All your existing JavaScript for NASA, Spotify, etc.  stays the same...
+        // All your existing JavaScript stays exactly the same...
         let usedDates = [];
         let tracksUri = "";
         let accessToken = "";
@@ -336,17 +333,17 @@
         function checkImageQuality(imageUrl) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img. onload = function () {
+                img.onload = function () {
                     const width = this.naturalWidth;
                     const height = this.naturalHeight;
                     console.log(`Image dimensions: ${width}x${height}`);
                     const minWidth = 1920;
                     const minHeight = 1080;
                     if (width >= minWidth && height >= minHeight) {
-                        console.log('✓ Image is high quality! ');
+                        console.log('✓ Image is high quality!');
                         resolve(true);
                     } else {
-                        console.log('✗ Image too small, trying another.. .');
+                        console.log('✗ Image too small, trying another...');
                         resolve(false);
                     }
                 };
@@ -376,7 +373,7 @@
                 const response = await fetch('https://api.nasa.gov/planetary/apod?api_key=nadHSFcvaHdLHtlXiPwRjMeOS9vKdgvTYZFgh9c1&date=' + dateStr);
                 if (!response.ok) throw new Error('NASA API request failed');
                 const data = await response.json();
-                console.log('NASA image received:', data. title);
+                console.log('NASA image received:', data.title);
 
                 if (data.media_type !== 'image') {
                     console.log('Got a video instead of image, fetching another date...');
@@ -388,10 +385,10 @@
                 const isHighQuality = await checkImageQuality(imageUrl);
 
                 if (isHighQuality) {
-                    document.querySelector(". page-bg").style.backgroundImage = "url('" + imageUrl + "')";
+                    document.querySelector(".page-bg").style.backgroundImage = "url('" + imageUrl + "')";
                     document.querySelector("#page-bg").classList.add('page-bg-active');
                     setTimeout(() => {
-                        document. querySelector("#page-bg").classList.remove('page-bg-active');
+                        document.querySelector("#page-bg").classList.remove('page-bg-active');
                     }, 250);
                     nasaAttempts = 0;
                 } else {
@@ -402,6 +399,94 @@
                 console.error('NASA API Error:', error);
                 getNASAImage();
             }
+        }
+
+        function getQuotes() {
+            console.log('Fetching quote...');
+            const quoteAPIs = [
+                {
+                    name: 'DummyJSON',
+                    url: 'https://dummyjson.com/quotes/random',
+                    headers: {},
+                    parse: (data) => ({ content: data.quote, author: data.author })
+                },
+                {
+                    name: 'API Ninjas',
+                    url: 'https://api.api-ninjas.com/v1/quotes?category=inspirational',
+                    headers: {},
+                    parse: (data) => ({ content: data[0].quote, author: data[0].author })
+                },
+                {
+                    name: 'Quotable',
+                    url: 'https://api.quotable.io/quotes/random',
+                    headers: {},
+                    parse: (data) => ({ content: data[0].content, author: data[0].author })
+                },
+                {
+                    name: 'ZenQuotes (CORS proxy)',
+                    url: 'https://corsproxy.io/?https://zenquotes.io/api/random',
+                    headers: {},
+                    parse: (data) => ({ content: data[0].q, author: data[0].a })
+                }
+            ];
+            tryQuoteAPI(0, quoteAPIs);
+        }
+
+        function tryQuoteAPI(index, apis) {
+            if (index >= apis.length) {
+                console.log('All quote APIs failed, using static quotes');
+                useStaticQuote();
+                return;
+            }
+            const api = apis[index];
+            console.log(`Trying quote API: ${api.name}`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            fetch(api.url, {
+                headers: api.headers,
+                signal: controller.signal
+            })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    console.log(`${api.name} response status:`, response.status);
+                    if (!response.ok) {
+                        throw new Error(`${api.name} failed with status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`${api.name} quote received:`, data);
+                    const parsed = api.parse(data);
+                    if (parsed.content && parsed.author) {
+                        // document.querySelector("#quotes-content").innerHTML = parsed.content;
+                        // document.querySelector("#quotes-author").innerHTML = parsed.author;
+                    } else {
+                        throw new Error('Invalid quote data received');
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    console.error(`${api.name} Error:`, error.message);
+                    tryQuoteAPI(index + 1, apis);
+                });
+        }
+
+        function useStaticQuote() {
+            const staticQuotes = [
+                { content: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+                { content: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+                { content: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+                { content: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+                { content: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+                { content: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+                { content: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+                { content: "The harder you work for something, the greater you'll feel when you achieve it.", author: "Anonymous" }
+            ];
+            const randomQuote = staticQuotes[Math.floor(Math.random() * staticQuotes.length)];
+            document.querySelector("#quotes-content").innerHTML = randomQuote.content;
+            document.querySelector("#quotes-author").innerHTML = randomQuote.author;
+            console.log('Using static quote');
         }
 
         function getSpotifyToken() {
@@ -422,19 +507,19 @@
                     console.log('Token response status:', response.status);
                     if (!response.ok) {
                         return response.text().then(text => {
-                            throw new Error('Token request failed:  ' + text);
+                            throw new Error('Token request failed: ' + text);
                         });
                     }
                     return response.json();
                 })
                 .then(data => {
                     console.log('Token received successfully');
-                    accessToken = data. access_token;
+                    accessToken = data.access_token;
                     searchSpotifyTracks();
                 })
                 .catch(error => {
                     console.error('Spotify Token Error:', error);
-                    document.querySelector("#song-title").innerHTML = "Brandenburg Concerto No. 4 in G Major, BWV1049:  I. Allegro";
+                    document.querySelector("#song-title").innerHTML = "Brandenburg Concerto No.4 in G Major, BWV1049: I. Allegro";
                 });
         }
 
@@ -453,7 +538,7 @@
             fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50`, {
                 method: 'GET',
                 headers: {
-                    'Authorization':  'Bearer ' + accessToken
+                    'Authorization': 'Bearer ' + accessToken
                 }
             })
                 .then(response => {
@@ -483,11 +568,11 @@
 
         function displayRandomTrack() {
             if (trackList.length > 0) {
-                const randomIndex = Math.floor(Math. random() * trackList.length);
+                const randomIndex = Math.floor(Math.random() * trackList.length);
                 const track = trackList[randomIndex];
                 if (track && track.name && track.artists && track.artists[0]) {
                     const trackName = track.name;
-                    const artistName = track.artists. map(artist => artist.name).join(', ');
+                    const artistName = track.artists.map(artist => artist.name).join(', ');
                     document.querySelector("#song-title").innerHTML = `${trackName} - ${artistName}`;
                     currentTrackUri = track.id;
                     console.log('Displaying track:', trackName, '-', artistName, 'ID:', currentTrackUri);
@@ -507,14 +592,14 @@
         }
 
         function toggleMusic() {
-            if (! currentTrackUri) {
-                alert('Please wait for music to load.. .');
+            if (!currentTrackUri) {
+                alert('Please wait for music to load...');
                 return;
             }
             const playerDiv = document.getElementById('spotify-player');
             const playPauseBtn = document.getElementById('play-pause-btn');
 
-            if (! isPlaying) {
+            if (!isPlaying) {
                 updateSpotifyPlayer();
                 playerDiv.classList.add('active');
                 isPlaying = true;
@@ -524,144 +609,22 @@
                 playerDiv.classList.remove('active');
                 isPlaying = false;
                 playPauseBtn.src = './images/play.png';
-                console. log('Pausing music...');
+                console.log('Pausing music...');
             }
         }
 
         function updateSpotifyPlayer() {
             if (currentTrackUri) {
                 const iframe = document.getElementById('spotify-iframe');
-                iframe.src = `https://open.spotify.com/embed/track/${currentTrackUri}? utm_source=generator&theme=0`;
+                iframe.src = `https://open.spotify.com/embed/track/${currentTrackUri}?utm_source=generator&theme=0`;
             }
         }
 
-// Weekly Report Functions
-function report() {
-    if (! document.cookie) {
-        loginOpen();
-        return;
-    }
-    
-    // Show the modal
-    document.getElementById('tanceng-wrapper').style.display = 'flex';
-    document.getElementById('tanceng-report').style.display = 'block';
-    
-    // Fetch report data
-    fetchWeeklyReport();
-}
-
-function fetchWeeklyReport() {
-    fetch(BASE_API + "/report", {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-    })
-    .then(response => response.json())
-    .then(res => {
-        if (res.success) {
-            displayWeeklyReport(res.data);
-        } else {
-            alert('Failed to load report');
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching report:', error);
-        alert('Error loading report');
-    });
-}
-
-function displayWeeklyReport(data) {
-    // Calculate total hours (each record = 25 minutes)
-    const totalMinutes = data.reduce((sum, day) => sum + (day.recordCount * 25), 0);
-    const totalHours = (totalMinutes / 60).toFixed(1);
-    document.getElementById('report-total').innerHTML = totalHours + ' hours';
-    
-    // Prepare chart data
-    const dates = data.map(item => {
-        const date = new Date(item.date);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
-    const counts = data.map(item => item.recordCount);
-    
-    // Initialize ECharts
-    const chartDom = document.getElementById('layer-chart');
-    const myChart = echarts.init(chartDom);
-    
-    const option = {
-        backgroundColor: '#ffffff',
-        grid: {
-            left: '10%',
-            right: '5%',
-            top: '15%',
-            bottom: '15%'
-        },
-        xAxis: {
-            type: 'category',
-            data: dates,
-            axisLabel: {
-                fontSize: 14,
-                color: '#666'
-            },
-            axisLine: {
-                lineStyle: {
-                    color: '#ddd'
-                }
-            }
-        },
-        yAxis:  {
-            type: 'value',
-            name: 'Pomodoros',
-            nameTextStyle: {
-                fontSize: 14,
-                color:  '#666'
-            },
-            axisLabel: {
-                fontSize: 14,
-                color: '#666'
-            },
-            splitLine: {
-                lineStyle:  {
-                    color: '#f0f0f0'
-                }
-            }
-        },
-        series: [{
-            data: counts,
-            type: 'bar',
-            itemStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    { offset: 0, color: '#83bff6' },
-                    { offset: 0.5, color: '#188df0' },
-                    { offset: 1, color: '#188df0' }
-                ]),
-                borderRadius: [8, 8, 0, 0]
-            },
-            barWidth: '50%',
-            label: {
-                show: true,
-                position: 'top',
-                fontSize: 14,
-                color:  '#333',
-                fontWeight: 'bold'
-            }
-        }]
-    };
-    
-    myChart.setOption(option);
-}
-        
         // Initialize
         getNASAImage();
+        getQuotes();
         getSpotifyToken();
-        
-        // Check authentication and load tasks
-        checkAuthStatus().then(isAuthenticated => {
-            if (isAuthenticated) {
-                getTasks();
-            }
-        });
+        getTasks();
     </script>
 </body>
 
