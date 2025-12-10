@@ -1,237 +1,260 @@
-// User Authentication Functions
-
-// Check if user is logged in on page load
 async function checkAuthStatus() {
     try {
-        const response = await fetch(`${API_URL}/auth/status`, {
+        const response = await fetch(BASE_API + "/getTasks", {
             method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
-
-        const data = await response.json();
-        
-        if (data.success && data.authenticated) {
-            console.log('✅ User is authenticated:', data.user.name);
-            updateUIForLoggedInUser(data.user);
-            return true;
-        } else {
-            console.log('❌ User not authenticated');
-            updateUIForLoggedOutUser();
-            return false;
-        }
+        const res = await response.json();
+        return res.success && res.data;
     } catch (error) {
-        console.error('Error checking auth status:', error);
-        updateUIForLoggedOutUser();
+        console.error('Auth check failed:', error);
         return false;
     }
 }
 
-// Update UI based on authentication status
-function updateUIForLoggedInUser(user) {
-    document.getElementById('btn-sign-up').style.display = 'none';
-    document.getElementById('btn-log-in').style.display = 'none';
-    document.getElementById('btn-log-out').style.display = 'inline';
-}
+function login() {
+    let name = document.querySelector("#input-login-name").value;
+    let password = document.querySelector("#input-login-password").value;
 
-function updateUIForLoggedOutUser() {
-    document.getElementById('btn-sign-up').style.display = 'inline';
-    document.getElementById('btn-log-in').style.display = 'inline';
-    document.getElementById('btn-log-out').style.display = 'none';
-    
-    // Clear tasks
-    document.getElementById('task-list').innerHTML = '';
-}
-
-// Login function
-async function login() {
-    const name = document.getElementById('input-login-name').value.trim();
-    const password = document.getElementById('input-login-password').value;
-    const resultDiv = document.getElementById('login-result');
-
-    // Clear previous error
-    resultDiv.textContent = '';
-    resultDiv.style.display = 'none';
-
-    // Validation
-    if (!name || !password) {
-        resultDiv.textContent = 'Please fill in all fields. ';
-        resultDiv.style. display = 'block';
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ name, password })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            console.log('✅ Login successful');
+    fetch(BASE_API + "/login?name=" + name + "&password=" + password, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(res => {
+        if (res.success) {
+            getTasks();
             layerClose();
-            updateUIForLoggedInUser(data.user);
-            getTasks(); // Load user's tasks
-        } else {
-            resultDiv.textContent = data.error || 'Email or password invalid.';
-            resultDiv.style.display = 'block';
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        resultDiv.textContent = 'Connection error. Please try again.';
-        resultDiv.style.display = 'block';
-    }
-}
-
-// Signup function
-async function signup() {
-    const name = document.getElementById('input-signup-name').value.trim();
-    const password = document.getElementById('input-signup-password').value;
-    const confirm = document.getElementById('input-signup-confirm').value;
-    const resultDiv = document.getElementById('signup-result');
-
-    // Clear previous error
-    resultDiv.textContent = '';
-    resultDiv.style.display = 'none';
-
-    // Validation
-    if (! name || !password || !confirm) {
-        resultDiv.textContent = 'Please fill in all fields.';
-        resultDiv.style.display = 'block';
-        return;
-    }
-
-    if (name.length < 3) {
-        resultDiv.textContent = 'Name must be at least 3 characters. ';
-        resultDiv.style. display = 'block';
-        return;
-    }
-
-    if (password. length < 6) {
-        resultDiv.textContent = 'Password must be at least 6 characters.';
-        resultDiv.style.display = 'block';
-        return;
-    }
-
-    if (password !== confirm) {
-        resultDiv.textContent = 'Passwords do not match.';
-        resultDiv.style.display = 'block';
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/signup`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ name, password })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            console.log('✅ Signup successful');
-            layerClose();
-            updateUIForLoggedInUser(data. user);
-            getTasks(); // Load empty task list
-        } else {
-            resultDiv.textContent = data. error || 'Signup failed. ';
-            resultDiv.style. display = 'block';
-        }
-    } catch (error) {
-        console.error('Signup error:', error);
-        resultDiv.textContent = 'Connection error. Please try again.';
-        resultDiv.style.display = 'block';
-    }
-}
-
-// Logout function
-async function logout() {
-    try {
-        const response = await fetch(`${API_URL}/logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            console.log('✅ Logout successful');
-            updateUIForLoggedOutUser();
             
-            // Clear form inputs
-            document.getElementById('input-login-name').value = '';
-            document.getElementById('input-login-password').value = '';
-            document.getElementById('input-signup-name').value = '';
-            document. getElementById('input-signup-password').value = '';
-            document.getElementById('input-signup-confirm').value = '';
+            // Update UI to logged-in state
+            document.querySelector("#btn-sign-up").style.display = "none";
+            document. querySelector("#btn-log-in").style.display = "none";
+            document.querySelector("#btn-log-out").style.display = "inline";
         }
-    } catch (error) {
-        console.error('Logout error:', error);
+        else {
+            document.querySelector("#login-result").innerHTML = res.error;
+        }
+    })
+    .catch(error => {
+        console.log(error);
+    });
+}
+
+function signup() {
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    let name = document.querySelector("#input-signup-name").value;
+    let password = document. querySelector("#input-signup-password").value;
+    let confirm = document.querySelector("#input-signup-confirm").value;
+    
+    if (password != confirm) {
+        document.querySelector("#signup-result").innerHTML = "Password doesn't match.";
+    }
+    else if (!regex.test(name)) {
+        document.querySelector("#signup-result").innerHTML = "Email address invalid.";
+    }
+    else {
+        fetch(BASE_API + "/signup?name=" + name + "&password=" + password, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(res => {
+            getTasks();
+            layerClose();
+            
+            // Update UI to logged-in state
+            document. querySelector("#btn-sign-up").style.display = "none";
+            document.querySelector("#btn-log-in").style.display = "none";
+            document.querySelector("#btn-log-out").style.display = "inline";
+        })
+        .catch(error => {
+            console.error('Error fetching tasks:', error);
+            alert('Failed to signup. Please check your connection.');
+        });
     }
 }
 
-// Open login popup
 function loginOpen() {
-    document.getElementById('tanceng-wrapper').style.display = 'flex';
-    document.getElementById('tanceng-login').style.display = 'block';
-    document.getElementById('tanceng-signup').style.display = 'none';
-    document.getElementById('tanceng-report').style.display = 'none';
-    
-    // Clear error messages
-    document.getElementById('login-result').style.display = 'none';
-    document.getElementById('login-result').textContent = '';
+    document.querySelector("#tanceng-wrapper").style.display = "flex";
+    document.querySelector("#tanceng-login").style.display = "block";
+    document.querySelector("#tanceng-signup").style.display = "none";
+    document.querySelector("#input-login-name").value = "";
+    document.querySelector("#input-login-password").value = "";
+    document.querySelector("#login-result").innerHTML = "";
 }
 
-// Open signup popup
 function signupOpen() {
-    document.getElementById('tanceng-wrapper').style.display = 'flex';
-    document.getElementById('tanceng-signup').style.display = 'block';
-    document.getElementById('tanceng-login').style.display = 'none';
-    document.getElementById('tanceng-report').style.display = 'none';
-    
-    // Clear error messages
-    document.getElementById('signup-result').style.display = 'none';
-    document.getElementById('signup-result').textContent = '';
+    document.querySelector("#tanceng-wrapper").style.display = "flex";
+    document.querySelector("#tanceng-login").style.display = "none";
+    document.querySelector("#tanceng-signup").style.display = "block";
+    document.querySelector("#input-signup-name").value = "";
+    document.querySelector("#input-signup-password").value = "";
+    document. querySelector("#input-signup-confirm").value = "";
+    document.querySelector("#signup-result").innerHTML = "";
 }
 
-// Close popup layer
 function layerClose() {
-    document.getElementById('tanceng-wrapper').style.display = 'none';
-    document.getElementById('tanceng-login').style.display = 'none';
-    document.getElementById('tanceng-signup').style.display = 'none';
-    document.getElementById('tanceng-report').style.display = 'none';
+    document.querySelector("#tanceng-login").style.display = "none";
+    document. querySelector("#tanceng-signup").style.display = "none";
+    document.querySelector("#tanceng-report").style.display = "none";
+    document.querySelector("#tanceng-wrapper").style.display = "none";
 }
 
-// Add Enter key support for login
-document.addEventListener('DOMContentLoaded', function() {
-    const loginInputs = ['input-login-name', 'input-login-password'];
-    loginInputs.forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    login();
-                }
-            });
+function report() {
+    if (!document.cookie) {
+        loginOpen();
+        return;
+    }
+    
+    document.querySelector("#tanceng-wrapper").style.display = "flex";
+    document.querySelector("#tanceng-report").style.display = "block";
+    
+    fetch(BASE_API + "/report", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(res => {
+        if (res.success) {
+            let total = 0;
+            let xArray = [];
+            let yArray = [];
+            for (let i = 0; i < res.data.length; i++) {
+                total += res.data[i].recordCount;
+                
+                // Format date nicely
+                const date = new Date(res.data[i].date);
+                const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                xArray.push(formattedDate);
+                yArray.push(res.data[i].recordCount);
+            }
+            
+            // Display total hours (25 min per pomodoro)
+            const totalHours = (total * 25 / 60).toFixed(1);
+            document.querySelector("#report-total").innerHTML = totalHours + " hours";
+            
+            // Render chart
+            var chart = echarts.init(document.getElementById('layer-chart'));
+            var option = {
+                backgroundColor: '#ffffff',
+                grid: {
+                    left: '10%',
+                    right: '5%',
+                    top: '15%',
+                    bottom: '15%'
+                },
+                xAxis: {
+                    type:  'category',
+                    data: xArray,
+                    axisLabel: {
+                        fontSize: 14,
+                        color: '#666'
+                    }
+                },
+                yAxis:  {
+                    type: 'value',
+                    name: 'Pomodoros',
+                    nameTextStyle: {
+                        fontSize: 14,
+                        color: '#666'
+                    },
+                    axisLabel: {
+                        fontSize: 14,
+                        color: '#666'
+                    }
+                },
+                series: [{
+                    type: 'bar',
+                    data: yArray,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#83bff6' },
+                            { offset: 1, color: '#188df0' }
+                        ]),
+                        borderRadius: [8, 8, 0, 0]
+                    },
+                    barWidth: '50%',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        fontSize: 14,
+                        color: '#333',
+                        fontWeight: 'bold'
+                    }
+                }]
+            };
+            chart. setOption(option);
         }
+        else {
+            alert("Failed to load report.");
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching report:', error);
+        alert('Failed to load report. Please check your connection.');
     });
+}
 
-    const signupInputs = ['input-signup-name', 'input-signup-password', 'input-signup-confirm'];
-    signupInputs.forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    signup();
-                }
-            });
-        }
+function logout() {
+    fetch(BASE_API + "/logout", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials:  'include'
+    })
+    .then(response => response. json())
+    .then(res => {
+        // Clear tasks
+        tasks = [];
+        renderTasksDom();
+        updateCurrentTaskDisplay();
+        
+        // Update UI to logged-out state
+        document.querySelector("#btn-sign-up").style.display = "inline";
+        document. querySelector("#btn-log-in").style.display = "inline";
+        document.querySelector("#btn-log-out").style.display = "none";
+        
+        console. log('✅ Logged out successfully');
+    })
+    .catch(error => {
+        console.error('Logout error:', error);
     });
-});
+}
+
+// Initialize on page load
+window.onload = async function() {
+    const isAuthenticated = await checkAuthStatus();
+    
+    if (isAuthenticated) {
+        // Show logged-in state
+        document.querySelector("#btn-sign-up").style.display = "none";
+        document.querySelector("#btn-log-in").style.display = "none";
+        document.querySelector("#btn-log-out").style.display = "inline";
+        
+        // Load tasks
+        getTasks();
+    } else {
+        // Show logged-out state
+        document.querySelector("#btn-sign-up").style.display = "inline";
+        document.querySelector("#btn-log-in").style.display = "inline";
+        document.querySelector("#btn-log-out").style.display = "none";
+        
+        // Clear any stale tasks
+        tasks = [];
+        renderTasksDom();
+    }
+}
