@@ -1,348 +1,303 @@
-// Task Management Functions
-
 let tasks = [];
-let currentTaskIndex = -1;
+let current = 0;
+let handle = "";
 
-// Get all tasks from API
-async function getTasks() {
-    try {
-        const response = await fetch(`${API_URL}/getTasks`, {
-            method: 'GET',
-            credentials: 'include'
-        });
+// ✅ UPDATED: Your Railway backend URL
+// const BASE_API = "https://orbit20-production-9e31.up.railway.app"
+const BASE_API = "http://115.190.50.47:3000"
+// const BASE_API = "http://localhost:3000"
 
-        if (response.status === 401) {
-            console.log('❌ Not authenticated, showing login');
-            updateUIForLoggedOutUser();
-            loginOpen();
-            return;
-        }
+function clickAdd() {
+    // if (!localStorage.getItem("user")) {
+    // if (!document.cookie) {
+    //     loginOpen();
+    //     return;
+    // }
+    handle = "add";
+    renderTasksDom();
+}
 
-        const data = await response.json();
+function clickSave() {
+    let name = document.querySelector("#input-task-name").value;
+    let num = document.querySelector("#input-task-num").value;
+    addTask(name, num);
+}
 
-        if (data.success) {
-            tasks = data.data || [];
-            console.log('✅ Tasks loaded:', tasks.length);
-            renderTasks();
-            
-            // Update current task display if timer is running
-            if (currentTaskIndex >= 0 && currentTaskIndex < tasks.length) {
-                updateCurrentTaskDisplay(tasks[currentTaskIndex]);
-            }
-        }
-    } catch (error) {
-        console.error('Error getting tasks:', error);
+function clickCancel() {
+    handle = "";
+    renderTasksDom();
+}
+
+function clickNum1() {
+    let num = parseInt(document.querySelector("#input-task-num").value);
+    document.querySelector("#input-task-num").value = num + 1;
+}
+
+function clickNum0() {
+    let num = parseInt(document.querySelector("#input-task-num").value);
+    if (num > 1) {
+        document.querySelector("#input-task-num").value = num - 1;
     }
 }
 
-// Render tasks in the UI
-function renderTasks() {
-    const taskList = document.getElementById('task-list');
-    
-    if (! tasks || tasks.length === 0) {
-        taskList.innerHTML = '<div style="opacity: 0.5;">No tasks yet. Click + to add one! </div>';
-        return;
+function existTask() {
+    let exist = false;
+    for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i].finish < tasks[i].num) {
+            exist = true;
+            break;
+        }
     }
+    return exist;
+}
 
-    let html = '';
-    tasks.forEach((task, index) => {
-        const isActive = index === currentTaskIndex;
-        const activeClass = isActive ? 'task-active' : '';
-        
-        html += `
-            <div class="task-item ${activeClass}" onclick="selectTask(${index})">
-                <div class="task-name">${task.name}</div>
-                <div class="task-progress">${task.finish}/${task.num}</div>
+// ✅ Get current active task
+function getCurrentTask() {
+    for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i].finish < tasks[i].num) {
+            return tasks[i];
+        }
+    }
+    return null;
+}
+
+// ✅ UPDATED: Use opacity to hide/show while keeping space
+function updateCurrentTaskDisplay() {
+    const currentTask = getCurrentTask();
+    const displayElement = document.querySelector("#current-task-display");
+    
+    if (currentTask) {
+        // Show task name with progress
+        displayElement.innerHTML = `${currentTask.name} (${currentTask.finish}/${currentTask.num})`;
+        displayElement.classList.remove('empty');
+    } else {
+        // Hide text but keep the space
+        displayElement.innerHTML = "&nbsp;"; // Non-breaking space to maintain height
+        displayElement.classList.add('empty');
+    }
+}
+
+function getTasks() {
+    // if (!document.cookie) {
+    //     tasks = [];
+    //     renderTasksDom();
+    //     return;
+    // }
+    fetch(BASE_API + "/getTasks", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(res => {
+        tasks = res.data;
+        handle = "";
+        renderTasksDom();
+        updateCurrentTaskDisplay(); // ✅ ADDED
+    })
+    .catch(error => {
+        console.error('Error fetching tasks:', error);
+        alert('Failed to load tasks. Please check your connection.');
+    });
+}
+
+function addTask(name, num) {
+    // if (!document.cookie) {
+    //     loginOpen();
+    //     return;
+    // }
+    if (name) {
+        fetch(BASE_API + "/addTask?name=" + encodeURIComponent(name) + "&num=" + num, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(res => {
+            tasks = res.data;
+            handle = "";
+            renderTasksDom();
+            updateCurrentTaskDisplay(); // ✅ ADDED
+        })
+        .catch(error => {
+            console.error('Error adding task:', error);
+            alert('Failed to add task. Please try again.');
+        });
+    }
+    else {
+        alert("name is required")
+    }
+}
+
+function updateTask() {
+    // write record
+    fetch(BASE_API + "/recordAdd", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials: 'include'
+    })
+        .then(response => response.json())
+        .then(res => {
+            
+        })
+        .catch(error => {
+            console.error('Error record add:', error);
+        });
+    let id = "";
+    let finish = "";
+    let isDelete = false;
+    for (let i = 0; i < tasks.length; i++) {
+        if (tasks[i].finish < tasks[i].num) {
+            id = tasks[i]._id;
+            finish = tasks[i].finish + 1;
+            if (finish == tasks[i].num) {
+                isDelete = true;
+                timeType = 0;
+                reset();
+            }
+            break;
+        }
+    }
+    if (isDelete) {
+        audioPlay("alarm");
+        fetch(BASE_API + "/deleteTask?id=" + id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                tasks = res.data;
+                handle = "";
+                renderTasksDom();
+                updateCurrentTaskDisplay(); // ✅ ADDED
+            })
+            .catch(error => {
+                console.error('Error deleting task:', error);
+            });
+    }
+    else {
+        fetch(BASE_API + "/updateTask?id=" + id + "&finish=" + finish,{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=UTF-8'
+            },
+            credentials: 'include'
+        })
+            .then(response => response.json())
+            .then(res => {
+                tasks = res.data;
+                handle = "";
+                renderTasksDom();
+                updateCurrentTaskDisplay(); // ✅ ADDED
+            })
+            .catch(error => {
+                console.error('Error updating task:', error);
+            });
+    }
+}
+
+function deleteTask(id) {
+    audioPlay("delete");
+    fetch(BASE_API + "/deleteTask?id=" + id, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials: 'include'
+    })
+        .then(response => response.json())
+        .then(res => {
+            tasks = res.data;
+            handle = "";
+            renderTasksDom();
+            updateCurrentTaskDisplay(); // ✅ ADDED
+        })
+        .catch(error => {
+            console.error('Error deleting task:', error);
+        });
+}
+
+function deleteAll() {
+    audioPlay("delete");
+    fetch(BASE_API + "/deleteAll", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json;charset=UTF-8'
+        },
+        credentials: 'include'
+    })
+        .then(response => response.json())
+        .then(res => {
+            tasks = res.data;
+            handle = "";
+            renderTasksDom();
+            updateCurrentTaskDisplay(); // ✅ ADDED
+        })
+        .catch(error => {
+            console.error('Error deleting all tasks:', error);
+        });
+}
+
+function renderTasksDom() {
+    let outputHtml = "";
+    if (handle == "add") {
+        document.querySelector("#task-top").style.display = "none";
+        outputHtml += `
+            <div style="margin-top: 6vh;text-align:left;">
+                <div>ADD A NEW TASK!</div>
+                <textarea name="message" rows="2" cols="50" id="input-task-name" type="text" placeholder="Enter here what you will be working on." style="background: rgba(255, 255, 255, 0.3); padding-left: 1vh"></textarea>
+                <div style="display: flex; justify-content: start; align-items: center; margin-top:5vh;">
+                    <div style="font-size:3.20vh;">SET POMOS</div>
+                    <input id="input-task-num" value="1"  type="text" style="background: rgba(255, 255, 255, 0.3);">
+                    <img class="up-dowm-btn"style="margin-right:1.28vh;" src="./images/up.png" alt="" onclick="clickNum1()">
+                    <img class="up-dowm-btn" src="./images/down.png" alt="" onclick="clickNum0()">
+                </div>
+                <div class="btn" style="text-align:center; justify-content: start; margin-top:10vh;">
+                    <div class="btn-item" style="margin-left:4vh;" onclick="clickCancel()">CANCEL</div>
+                    <div class="btn-item" onclick="clickSave()">SAVE</div>
+                </div>
             </div>
         `;
-    });
-    
-    taskList.innerHTML = html;
-}
-
-// Select a task
-function selectTask(index) {
-    currentTaskIndex = index;
-    renderTasks();
-    updateCurrentTaskDisplay(tasks[index]);
-}
-
-// Update current task display above timer
-function updateCurrentTaskDisplay(task) {
-    const display = document.getElementById('current-task-display');
-    if (task) {
-        display.textContent = task.name;
-        display.classList.remove('empty');
-    } else {
-        display.textContent = '\u00A0'; // Non-breaking space
-        display.classList.add('empty');
     }
-}
-
-// Add new task
-function clickAdd() {
-    const taskName = prompt('Enter task name:');
-    
-    if (! taskName || ! taskName.trim()) {
-        return;
-    }
-
-    const numPomodoros = prompt('Number of pomodoros needed:', '4');
-    const num = parseInt(numPomodoros) || 4;
-
-    addTask(taskName. trim(), num);
-}
-
-// Add task to API
-async function addTask(name, num) {
-    try {
-        const response = await fetch(`${API_URL}/addTask`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ name, num })
-        });
-
-        if (response.status === 401) {
-            loginOpen();
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            tasks = data.data || [];
-            console.log('✅ Task added');
-            renderTasks();
-        }
-    } catch (error) {
-        console.error('Error adding task:', error);
-        alert('Failed to add task. Please try again.');
-    }
-}
-
-// Update task progress
-async function updateTask(taskId, finish) {
-    try {
-        const response = await fetch(`${API_URL}/updateTask/${taskId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ finish })
-        });
-
-        if (response.status === 401) {
-            loginOpen();
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            tasks = data.data || [];
-            console.log('✅ Task updated');
-            renderTasks();
-        }
-    } catch (error) {
-        console.error('Error updating task:', error);
-    }
-}
-
-// Delete single task
-async function deleteTask(taskId) {
-    if (!confirm('Delete this task?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/deleteTask/${taskId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-
-        if (response.status === 401) {
-            loginOpen();
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            tasks = data.data || [];
-            console.log('✅ Task deleted');
-            
-            // Reset current task if it was deleted
-            if (currentTaskIndex >= tasks.length) {
-                currentTaskIndex = tasks.length - 1;
+    else {
+        document.querySelector("#task-top").style.display = "flex";
+        if (tasks && tasks.length > 0) {
+            outputHtml += `<div style="height: 53vh; overflow-y: auto;">`;
+            for (let i = 0; i < tasks.length; i++) {
+                outputHtml += `
+                    <div style="width: 100%; display: flex; align-items:center; border: 3px solid #FFFFFF; width: 100%; padding:0 1.9vh;font-size:2.45vh; height:7.02vh; margin-bottom:2.8vh;">
+                        <div style="flex-grow: 1; text-align: left;">${tasks[i].name}</div>
+                        <div>${tasks[i].finish}/${tasks[i].num}</div>
+                        <img style="height:2.53vh; margin:0 0 0.6vh 2vh; cursor: pointer;" src="./images/remove.png" onclick="deleteTask('${tasks[i]._id}')">
+                    </div>   
+                `;
             }
-            
-            renderTasks();
-            
-            if (currentTaskIndex >= 0) {
-                updateCurrentTaskDisplay(tasks[currentTaskIndex]);
-            } else {
-                updateCurrentTaskDisplay(null);
-            }
+            outputHtml += `</div>`;
         }
-    } catch (error) {
-        console.error('Error deleting task:', error);
+        else {
+            // ✅ UPDATED: Added 40% opacity to the entire message
+            outputHtml += `
+            <div style="margin-top:25vh; opacity: 0.4;">
+                Click <img style="width: 2.682vh;height:2.682vh;margin:0 1vh; cursor: pointer;" src="./images/add.png" alt="" onclick="clickAdd()"> to create new tasks!
+            </div>
+        `;
+        }
     }
+    document.querySelector("#task-list").innerHTML = outputHtml;
 }
 
-// Delete all tasks
-async function deleteAll() {
-    if (!confirm('Delete ALL tasks?  This cannot be undone!')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/deleteAll`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-
-        if (response.status === 401) {
-            loginOpen();
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            tasks = [];
-            currentTaskIndex = -1;
-            console.log('✅ All tasks deleted');
-            renderTasks();
-            updateCurrentTaskDisplay(null);
-        }
-    } catch (error) {
-        console.error('Error deleting all tasks:', error);
-    }
+function audioPlay(name) {
+    let audioDom = document.querySelector("#audio-bg");
+    audioDom.src = `./mp3/${name}.mp3`;
+    audioDom.play()
 }
 
-// Complete one pomodoro for current task
-async function completePomodoro() {
-    if (currentTaskIndex < 0 || currentTaskIndex >= tasks.length) {
-        return;
-    }
-
-    const task = tasks[currentTaskIndex];
-    
-    if (task.finish < task.num) {
-        await updateTask(task._id, task.finish + 1);
-        await addRecord(); // Add to weekly report
-        
-        // Move to next task if current one is complete
-        if (task.finish + 1 >= task.num) {
-            if (currentTaskIndex < tasks.length - 1) {
-                selectTask(currentTaskIndex + 1);
-            }
-        }
-    }
-}
-
-// Add record for weekly report
-async function addRecord() {
-    try {
-        await fetch(`${API_URL}/recordAdd`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-        console.log('✅ Pomodoro recorded');
-    } catch (error) {
-        console.error('Error adding record:', error);
-    }
-}
-
-// Show weekly report
-async function report() {
-    try {
-        const response = await fetch(`${API_URL}/report`, {
-            method: 'GET',
-            credentials: 'include'
-        });
-
-        if (response.status === 401) {
-            loginOpen();
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            showReportChart(data.data);
-        }
-    } catch (error) {
-        console.error('Error getting report:', error);
-        alert('Failed to load report. Please try again.');
-    }
-}
-
-// Show report chart
-function showReportChart(reportData) {
-    document.getElementById('tanceng-wrapper').style.display = 'flex';
-    document.getElementById('tanceng-report').style.display = 'block';
-    document.getElementById('tanceng-login').style.display = 'none';
-    document.getElementById('tanceng-signup').style.display = 'none';
-
-    // Calculate total hours (each pomodoro = 25 minutes)
-    const totalPomodoros = reportData.reduce((sum, day) => sum + day.recordCount, 0);
-    const totalHours = (totalPomodoros * 25 / 60).toFixed(1);
-    document.getElementById('report-total').textContent = totalHours;
-
-    // Prepare chart data
-    const dates = reportData.map(d => d.date. substring(5)); // MM-DD format
-    const counts = reportData.map(d => d.recordCount);
-
-    // Create chart
-    const chartDom = document.getElementById('layer-chart');
-    const myChart = echarts.init(chartDom);
-    
-    const option = {
-        xAxis:  {
-            type: 'category',
-            data: dates,
-            axisLabel: {
-                fontSize: 14
-            }
-        },
-        yAxis: {
-            type:  'value',
-            axisLabel: {
-                fontSize: 14
-            }
-        },
-        series: [{
-            data:  counts,
-            type: 'bar',
-            itemStyle: {
-                color: '#6366f1'
-            },
-            label: {
-                show: true,
-                position: 'top',
-                fontSize: 16
-            }
-        }],
-        tooltip: {
-            trigger: 'axis',
-            formatter: function(params) {
-                const value = params[0].value;
-                const hours = (value * 25 / 60).toFixed(1);
-                return `${params[0].name}<br/>${value} pomodoros<br/>${hours} hours`;
-            }
-        },
-        grid: {
-            left: '10%',
-            right: '5%',
-            top: '10%',
-            bottom: '15%'
-        }
-    };
-
-    myChart.setOption(option);
-}
